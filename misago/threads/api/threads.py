@@ -6,13 +6,13 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils.translation import ugettext as _
 
-from misago.categories import PRIVATE_THREADS_ROOT_NAME, THREADS_ROOT_NAME
+from misago.categories import PRIVATE_THREADS_ROOT_NAME, THREADS_ROOT_NAME, STATUS_THREADS_ROOT_NAME
 from misago.core.shortcuts import get_int_or_404
 from misago.threads.models import Post, Thread
 from misago.threads.moderation import threads as moderation
 from misago.threads.permissions import allow_use_private_threads
-from misago.threads.viewmodels import (ForumThread, PrivateThread,
-    ThreadsRootCategory, PrivateThreadsCategory)
+from misago.threads.viewmodels import (ForumThread, PrivateThread, StatusThread,
+    ThreadsRootCategory, PrivateThreadsCategory, StatusThreadsCategory)
 
 from .postingendpoint import PostingEndpoint
 from .threadendpoints.delete import delete_bulk, delete_thread
@@ -133,6 +133,45 @@ class PrivateThreadViewSet(ViewSet):
             request,
             PostingEndpoint.START,
             tree_name=PRIVATE_THREADS_ROOT_NAME,
+            thread=thread,
+            post=post,
+        )
+
+        if posting.is_valid():
+            posting.save()
+
+            return Response({
+                'id': thread.pk,
+                'title': thread.title,
+                'url': thread.get_absolute_url(),
+            })
+        else:
+            return Response(posting.errors, status=400)
+
+class StatusThreadViewSet(ViewSet):
+    category = StatusThreadsCategory
+    thread = StatusThread
+
+    def list(self, request):
+        return status_threads_list_endpoint(request)
+
+    @transaction.atomic
+    def create(self, request):
+        allow_use_status_threads(request.user)
+        if not request.user.acl_cache['can_start_status_threads']:
+            raise PermissionDenied(_("You can't start status threads."))
+
+        request.user.lock()
+
+        # Initialize empty instances for new thread
+        thread = Thread()
+        post = Post(thread=thread)
+
+        # Put them through posting pipeline
+        posting = PostingEndpoint(
+            request,
+            PostingEndpoint.START,
+            tree_name=STATUS_THREADS_ROOT_NAME,
             thread=thread,
             post=post,
         )

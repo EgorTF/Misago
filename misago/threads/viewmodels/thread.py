@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 
 from misago.acl import add_acl
-from misago.categories import PRIVATE_THREADS_ROOT_NAME, THREADS_ROOT_NAME
+from misago.categories import PRIVATE_THREADS_ROOT_NAME, THREADS_ROOT_NAME, STATUS_THREADS_ROOT_NAME
 from misago.categories.models import Category
 from misago.core.shortcuts import validate_slug
 from misago.core.viewmodel import ViewModel as BaseViewModel
@@ -11,12 +11,12 @@ from misago.threads.models import Poll, Thread
 from misago.threads.participants import make_participants_aware
 from misago.threads.permissions import (
     allow_see_private_thread, allow_see_thread, allow_use_private_threads)
-from misago.threads.serializers import PrivateThreadSerializer, ThreadSerializer
+from misago.threads.serializers import PrivateThreadSerializer, ThreadSerializer, StatusThreadSerializer
 from misago.threads.subscriptions import make_subscription_aware
 from misago.threads.threadtypes import trees_map
 
 
-__all__ = ['ForumThread', 'PrivateThread']
+__all__ = ['ForumThread', 'PrivateThread', 'StatusThread']
 
 BASE_RELATIONS = [
     'category',
@@ -144,3 +144,28 @@ class PrivateThread(ViewModel):
 
     def get_frontend_context(self):
         return PrivateThreadSerializer(self._model).data
+
+class StatusThread(ViewModel):
+    def get_thread(self, request, pk, slug=None):
+        allow_use_status_threads(request.user)
+
+        thread = get_object_or_404(
+            Thread.objects.select_related(*BASE_RELATIONS),
+            pk=pk,
+            category__tree_id=trees_map.get_tree_id_for_root(STATUS_THREADS_ROOT_NAME),
+        )
+
+        make_participants_aware(request.user, thread)
+        allow_see_status_thread(request.user, thread)
+
+        if slug:
+            validate_slug(thread, slug)
+
+        return thread
+
+    def get_root_name(self):
+        return _("Status threads")
+
+    def get_frontend_context(self):
+        return StatusThreadSerializer(self._model).data
+

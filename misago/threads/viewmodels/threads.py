@@ -20,7 +20,7 @@ from misago.threads.subscriptions import make_subscription_aware
 from misago.threads.utils import add_categories_to_items
 
 
-__all__ = ['ForumThreads', 'PrivateThreads', 'filter_read_threads_queryset']
+__all__ = ['ForumThreads', 'PrivateThreads', 'StatusThreads', 'filter_read_threads_queryset']
 
 LISTS_NAMES = {
     'all': None,
@@ -171,6 +171,73 @@ class PrivateThreads(ViewModel):
         participated_threads = request.user.threadparticipant_set.values('thread_id')
 
         if request.user.acl_cache['can_moderate_private_threads']:
+            queryset = queryset.filter(Q(id__in=participated_threads) | Q(has_reported_posts=True))
+        else:
+            queryset = queryset.filter(id__in=participated_threads)
+
+        return queryset
+
+    def get_remaining_threads_queryset(self, queryset, category, threads_categories):
+        return queryset.filter(category__in=threads_categories)
+
+    def filter_threads(self, request, threads):
+        make_participants_aware(request.user, threads)
+
+
+def get_threads_queryset(user, categories, list_type):
+    queryset = exclude_invisible_threads(user, categories, Thread.objects)
+
+    if list_type == 'all':
+        return queryset
+    else:
+        return filter_threads_queryset(user, categories, list_type, queryset)
+
+
+def filter_threads_queryset(user, categories, list_type, queryset):
+    if list_type == 'my':
+        return queryset.filter(starter=user)
+    elif list_type == 'subscribed':
+        subscribed_threads = user.subscription_set.values('thread_id')
+        return queryset.filter(id__in=subscribed_threads)
+    elif list_type == 'unapproved':
+        return queryset.filter(has_unapproved_posts=True)
+    elif list_type in ('new', 'unread'):
+        return filter_read_threads_queryset(user, categories, list_type, queryset)
+    else:
+        return queryset
+
+
+def filter_read_threads_queryset(user, categories, list_type, queryset):
+    # grab cutoffs for categories
+    cutoff_date = get_cutoff_date(user)
+
+    visible_posts = Post.objects.filter(posted_on__gt=cutoff_date)
+    visible_posts = exclude_invisible_posts(user, categories, visible_posts)
+
+    queryset = queryset.filter(id__in=visible_posts.distinct().values('thread'))
+
+    read_posts = visible_posts.filter(id__in=user.postread_set.values('post'))
+
+    if list_type == 'new':
+        # new threads have no entry in reads table
+        return queryset.exclude(id__in=read_posts.distinct().values('thread'))
+
+    if list_type == 'unread':
+        # unread threads were read in past but have new posts
+        unread_posts = visible_posts.exclude(id__in=user.postread_set.values('post'))
+        queryset = queryset.filter(id__in=read_posts.distinct().values('thread'))
+        queryset = queryset.filter(id__in=unread_posts.distinct().values('thread'))
+        return queryset
+
+class StatusThreads(ViewModel):
+    def get_base_queryset(self, request, threads_categories, list_type):
+        queryset = super(StatusThreads, self).get_base_queryset(
+            request, threads_categories, list_type)
+
+        # limit queryset to threads we are participant of
+        participated_threads = request.user.threadparticipant_set.values('thread_id')
+
+        if request.user.acl_cache['can_moderate_status_threads']:
             queryset = queryset.filter(Q(id__in=participated_threads) | Q(has_reported_posts=True))
         else:
             queryset = queryset.filter(id__in=participated_threads)

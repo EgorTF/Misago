@@ -7,9 +7,11 @@ from misago.categories.serializers import CategorySerializer
 from misago.core.shortcuts import validate_slug
 from misago.core.viewmodel import ViewModel as BaseViewModel
 from misago.threads.permissions import allow_use_private_threads
+from misago.threads.permissions import allow_use_status_threads
 
 
-__all__ = ['ThreadsRootCategory', 'ThreadsCategory', 'PrivateThreadsCategory']
+
+__all__ = ['ThreadsRootCategory', 'ThreadsCategory', 'PrivateThreadsCategory', 'StatusThreadsCategory']
 
 
 class ViewModel(BaseViewModel):
@@ -85,6 +87,14 @@ class PrivateThreadsCategory(ViewModel):
 
         return categories[0]
 
+class StatusThreadsCategory(ViewModel):
+    def get_categories(self, request):
+        return [Category.objects.status_threads()]
+
+    def get_category(self, request, categories, **kwargs):
+        allow_use_status_threads(request.user)
+
+        return categories[0]
 
 BasicCategorySerializer = CategorySerializer.subset_fields(
     'id', 'parent', 'name', 'description', 'is_closed', 'css_class',

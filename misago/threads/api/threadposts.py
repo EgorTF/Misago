@@ -11,7 +11,7 @@ from misago.core.shortcuts import get_int_or_404
 from misago.threads.models import Post
 from misago.threads.permissions import allow_edit_post, allow_reply_thread
 from misago.threads.serializers import AttachmentSerializer, PostSerializer
-from misago.threads.viewmodels import ForumThread, PrivateThread, ThreadPost, ThreadPosts
+from misago.threads.viewmodels import ForumThread, PrivateThread, StatusThread, ThreadPost, ThreadPosts
 from misago.users.online.utils import make_users_status_aware
 
 from .postendpoints.delete import delete_bulk, delete_post
@@ -263,3 +263,6 @@ class ThreadPostsViewSet(ViewSet):
 
 class PrivateThreadPostsViewSet(ViewSet):
     thread = PrivateThread
+
+class StatusThreadPostsViewSet(ViewSet):
+    thread = StatusThread

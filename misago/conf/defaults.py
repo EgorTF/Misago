@@ -20,6 +20,7 @@ MISAGO_ACL_EXTENSIONS = [
     'misago.threads.permissions.polls',
     'misago.threads.permissions.threads',
     'misago.threads.permissions.privatethreads',
+    'misago.threads.permissions.statusthreads',
     'misago.search.permissions',
 ]
 
@@ -80,6 +81,7 @@ MISAGO_POSTING_MIDDLEWARES = [
 MISAGO_THREAD_TYPES = [
     'misago.threads.threadtypes.thread.Thread',
     'misago.threads.threadtypes.privatethread.PrivateThread',
+    'misago.threads.threadtypes.statusthread.StatusThread',
 ]
 
 

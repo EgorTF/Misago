@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 
-from misago.threads.viewmodels import ForumThread, PrivateThread, ThreadPosts
+from misago.threads.viewmodels import ForumThread, PrivateThread, StatusThread, ThreadPosts
 
 
 class ThreadBase(View):
@@ -74,3 +74,7 @@ class ThreadView(ThreadBase):
 class PrivateThreadView(ThreadBase):
     thread = PrivateThread
     template_name = 'misago/thread/private_thread.html'
+
+class StatusThreadView(ThreadBase):
+    thread = StatusThread
+    template_name = 'misago/thread/status_thread.html'

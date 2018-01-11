@@ -5,10 +5,11 @@ from misago.conf import settings
 from misago.threads.views.attachment import attachment_server
 from misago.threads.views.goto import (
     ThreadGotoPostView, ThreadGotoLastView, ThreadGotoNewView, ThreadGotoUnapprovedView,
-    PrivateThreadGotoPostView, PrivateThreadGotoLastView, PrivateThreadGotoNewView
+    PrivateThreadGotoPostView, PrivateThreadGotoLastView, PrivateThreadGotoNewView,
+    StatusThreadGotoPostView, StatusThreadGotoLastView, StatusThreadGotoNewView
 )
-from misago.threads.views.list import ForumThreadsList, CategoryThreadsList, PrivateThreadsList
-from misago.threads.views.thread import ThreadView, PrivateThreadView
+from misago.threads.views.list import ForumThreadsList, CategoryThreadsList, PrivateThreadsList, StatusThreadsList
+from misago.threads.views.thread import ThreadView, PrivateThreadView, StatusThreadView
 
 LISTS_TYPES = ('all', 'my', 'new', 'unread', 'subscribed', 'unapproved', )
 
@@ -63,6 +64,12 @@ urlpatterns += threads_list_patterns(
     )
 )
 
+urlpatterns += threads_list_patterns(
+    'status-threads', StatusThreadsList, (
+        r'^status-threads/$', r'^status-threads/my/$', r'^status-threads/new/$',
+        r'^status-threads/unread/$', r'^status-threads/subscribed/$',
+    )
+)
 
 def thread_view_patterns(prefix, view):
     urls = [
@@ -78,6 +85,7 @@ def thread_view_patterns(prefix, view):
 
 urlpatterns += thread_view_patterns('thread', ThreadView)
 urlpatterns += thread_view_patterns('private-thread', PrivateThreadView)
+urlpatterns += thread_view_patterns('status-thread', StatusThreadView)
 
 
 def goto_patterns(prefix, **views):
@@ -110,6 +118,13 @@ urlpatterns += goto_patterns(
     post=PrivateThreadGotoPostView,
     last=PrivateThreadGotoLastView,
     new=PrivateThreadGotoNewView,
+)
+
+urlpatterns += goto_patterns(
+    'status-thread',
+    post=StatusThreadGotoPostView,
+    last=StatusThreadGotoLastView,
+    new=StatusThreadGotoNewView,
 )
 
 urlpatterns += [

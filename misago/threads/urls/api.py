@@ -1,8 +1,8 @@
 from misago.core.apirouter import MisagoApiRouter
 from misago.threads.api.attachments import AttachmentViewSet
 from misago.threads.api.threadpoll import ThreadPollViewSet
-from misago.threads.api.threadposts import PrivateThreadPostsViewSet, ThreadPostsViewSet
-from misago.threads.api.threads import PrivateThreadViewSet, ThreadViewSet
+from misago.threads.api.threadposts import PrivateThreadPostsViewSet, ThreadPostsViewSet, StatusThreadPostsViewSet
+from misago.threads.api.threads import PrivateThreadViewSet, ThreadViewSet, StatusThreadViewSet
 
 
 router = MisagoApiRouter()
@@ -20,6 +20,13 @@ router.register(
     r'private-threads/(?P<thread_pk>[^/.]+)/posts',
     PrivateThreadPostsViewSet,
     base_name='private-thread-post'
+)
+
+router.register(r'status-threads', StatusThreadViewSet, base_name='status-thread')
+router.register(
+    r'status-threads/(?P<thread_pk>[^/.]+)/posts',
+    StatusThreadPostsViewSet,
+    base_name='status-thread-post'
 )
 
 urlpatterns = router.urls

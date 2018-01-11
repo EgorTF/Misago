@@ -13,6 +13,7 @@ from .threadparticipant import ThreadParticipantSerializer
 __all__ = [
     'ThreadSerializer',
     'PrivateThreadSerializer',
+    'StatusThreadSerializer',
     'ThreadsListSerializer',
 ]
 
@@ -144,6 +145,15 @@ class ThreadSerializer(serializers.ModelSerializer, MutableFields):
 
 
 class PrivateThreadSerializer(ThreadSerializer):
+    participants = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Thread
+        fields = ThreadSerializer.Meta.fields + [
+            'participants',
+        ]
+
+class StatusThreadSerializer(ThreadSerializer):
     participants = serializers.SerializerMethodField()
 
     class Meta:

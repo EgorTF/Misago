@@ -9,7 +9,7 @@ from django.views import View
 from misago.conf import settings
 from misago.readtracker.dates import get_cutoff_date
 from misago.threads.permissions import exclude_invisible_posts
-from misago.threads.viewmodels import ForumThread, PrivateThread
+from misago.threads.viewmodels import ForumThread, PrivateThread, StatusThread
 
 
 class GotoView(View):
@@ -143,6 +143,26 @@ class PrivateThreadGotoLastView(GotoView):
 
 class PrivateThreadGotoNewView(GotoView, GetFirstUnreadPostMixin):
     thread = PrivateThread
+
+    def get_target_post(self, user, thread, posts_queryset, **kwargs):
+        return self.get_first_unread_post(user, posts_queryset)
+
+class StatusThreadGotoPostView(GotoView):
+    thread = StatusThread
+
+    def get_target_post(self, user, thread, posts_queryset, **kwargs):
+        return get_object_or_404(posts_queryset, pk=kwargs['post'])
+
+
+class StatusThreadGotoLastView(GotoView):
+    thread = StatusThread
+
+    def get_target_post(self, user, thread, posts_queryset, **kwargs):
+        return posts_queryset.order_by('id').last()
+
+
+class StatusThreadGotoNewView(GotoView, GetFirstUnreadPostMixin):
+    thread = StatusThread
 
     def get_target_post(self, user, thread, posts_queryset, **kwargs):
         return self.get_first_unread_post(user, posts_queryset)

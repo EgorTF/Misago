@@ -5,7 +5,7 @@ from django.views import View
 
 from misago.core.shortcuts import get_int_or_404
 from misago.threads.viewmodels import (
-    ForumThreads, PrivateThreads, PrivateThreadsCategory, ThreadsCategory, ThreadsRootCategory)
+    ForumThreads, PrivateThreads, StatusThreads, PrivateThreadsCategory, StatusThreadsCategory, ThreadsCategory, ThreadsRootCategory)
 
 
 class ThreadsList(View):
@@ -84,3 +84,9 @@ class PrivateThreadsList(ThreadsList):
     threads = PrivateThreads
 
     template_name = 'misago/threadslist/private_threads.html'
+
+class StatusThreadsList(ThreadsList):
+    category = StatusThreadsCategory
+    threads = StatusThreads
+
+    template_name = 'misago/threadslist/status_threads.html'
